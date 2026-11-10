@@ -6,6 +6,7 @@ from typing import TypedDict,Annotated
 import operator 
 import uuid
 import psycopg
+import asyncio
 from psycopg.rows import dict_row
 from langgraph.graph import StateGraph,START,END
 from langgraph.checkpoint.postgres import PostgresSaver
@@ -15,6 +16,8 @@ from langchain_core.messages import(
 from langchain_openai import ChatOpenAI
 from tools.flight_tool import search_flights
 from tools.tavily_tool import tavily_search
+from mcp_client_test import tavily_mcp_search
+
 
 
 load_dotenv()
@@ -73,7 +76,9 @@ def flight_agent(state: TravelState):
 #   HOTEL AGENT
 def hotel_agent(state: TravelState):
     query = f"Best hotels in {state['user_query']}"
-    hotel_results= tavily_search(query)
+    # hotel_results= tavily_search(query)
+    hotel_results= asyncio.run(tavily_mcp_search(query))
+    
 
     return {
         "hotel_results": hotel_results,
