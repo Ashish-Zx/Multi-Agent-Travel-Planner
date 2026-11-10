@@ -1,4 +1,5 @@
 import os
+import re
 import certifi
 from dotenv import load_dotenv
 from typing import TypedDict,Annotated
@@ -11,7 +12,7 @@ from langgraph.checkpoint.postgres import PostgresSaver
 from langchain_core.messages import(
     AnyMessage,HumanMessage,AIMessage,SystemMessage
 )
-from langchain_groq import ChatGroq
+from langchain_openai import ChatOpenAI
 from tools.flight_tool import search_flights
 from tools.tavily_tool import tavily_search
 
@@ -33,17 +34,17 @@ def get_database_url():
         database_url += f"{seperator}sslmode=require"
     return database_url
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-if not GROQ_API_KEY:
-    raise ValueError("GROQ_API_KEY environment variable is not set")
+INCEPTION_API_KEY = os.getenv("INCEPTION_API_KEY")
+if not INCEPTION_API_KEY:
+    raise ValueError("INCEPTION_API_KEY environment variable is not set")
 
 
-# LLM
-
-llm =ChatGroq(
-    model= "llama-3.3-70b-versatile",
-    api_key=GROQ_API_KEY
-)
+# LLM (Inception Mercury-3 via OpenAI-compatible endpoint)
+llm = ChatOpenAI(
+    model="mercury-3",
+    api_key=INCEPTION_API_KEY,
+    base_url="https://api.inceptionlabs.ai/v1",
+) 
 
 # STATE
 
@@ -128,8 +129,6 @@ def final_agent(state: TravelState):
 
 # GRAPH
 
-
-
 graph= StateGraph(TravelState)
 graph.add_node("flight_agent", flight_agent)
 graph.add_node("hotel_agent", hotel_agent)
@@ -154,3 +153,39 @@ checkpointer =PostgresSaver(_conn)
 checkpointer.setup()
 
 travel_graph= graph.compile(checkpointer=checkpointer)
+
+def run_travel_agent(user_input:str,thread_id:str|None=None):
+    if not thread_id:
+        thread_id=f"user_{uuid.uuid4().hex}"
+
+    config={
+        "configurable": {
+            "thread_id": thread_id
+        }
+    }    
+
+    result =travel_graph.invoke(
+        {
+            "messages":[
+                HumanMessage(content=user_input)
+            ],
+            "user_query": user_input,
+            "flight_results": "",
+            "hotel_results": "",
+            "itinerary": "",
+            "llm_calls": 0
+        }, 
+        config=config
+    ) 
+    final_answer=result["messages"][-1].content
+    return {
+        "thread_id": thread_id,
+        "answer": final_answer,
+        "flight_results": result.get("flight_results", ""),
+        "hotel_results": result.get("hotel_results", ""),
+        "itinerary": result.get("itinerary", ""),
+        "llm_calls": result.get("llm_calls", 0)
+    }
+
+
+
