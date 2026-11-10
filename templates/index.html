@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Travel Planner</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo">✈️</span>
+        <div>
+          <h1>Travel Planner</h1>
+          <p>AI-powered trip planning assistant</p>
+        </div>
+      </div>
+      <div class="health">
+        <span class="dot" id="health-dot"></span>
+        <span id="health-text">checking…</span>
+      </div>
+    </header>
+
+    <main class="chat" id="chat">
+      <div class="welcome" id="welcome">
+        <div class="welcome-icon">🌍</div>
+        <h2>Where to next?</h2>
+        <p>Describe your trip and I'll plan flights, hotels, and a day-by-day itinerary.</p>
+        <div class="suggestions">
+          <button class="chip">Weekend trip to Paris</button>
+          <button class="chip">3-day business trip to Tokyo</button>
+          <button class="chip">Budget beach vacation in Goa</button>
+        </div>
+      </div>
+    </main>
+
+    <footer class="composer">
+      <form id="form">
+        <div class="input-row">
+          <textarea id="input" rows="1" placeholder="Describe your trip…" autocomplete="off"></textarea>
+          <button type="submit" id="send" aria-label="Send">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M3.4 20.4l17.45-7.48a1 1 0 000-1.84L3.4 3.6a.993.993 0 00-1.39.91L2 9.12c0 .5.37.93.87.99L17 12 2.87 13.88c-.5.07-.87.5-.87 1l.01 4.61c0 .71.73 1.2 1.39.91z"/>
+            </svg>
+          </button>
+        </div>
+        <div class="meta" id="meta"></div>
+      </form>
+    </footer>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>
