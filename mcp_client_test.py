@@ -7,6 +7,7 @@ from langchain_mcp_adapters.client import MultiServerMCPClient
 load_dotenv()
 TAVILY_API_KEY=os.getenv("TAVILY_API_KEY")
 
+# remote mcp
 client = MultiServerMCPClient(
     {
         "tavily":{
