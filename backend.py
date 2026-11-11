@@ -17,7 +17,8 @@ from langchain_openai import ChatOpenAI
 from tools.flight_tool import search_flights
 from tools.tavily_tool import tavily_search
 # from mcp_client_test import tavily_mcp_search
-from mcp_client import tavily_mcp_search,aviation_mcp_call
+from mcp_client import tavily_mcp_search,aviation_mcp_call,extract_destination,forecast_mcp_search,weather_mcp_search
+
 
 load_dotenv()
 
@@ -55,6 +56,7 @@ class TravelState(TypedDict):
     user_query:str
     flight_results:str
     hotel_results:str
+    weather_results:str
     itinerary:str
     llm_calls:int
 
@@ -137,9 +139,27 @@ def hotel_agent(state: TravelState):
         "llm_calls": state.get("llm_calls", 0) + 1
     }
 
+# Weather
+def weather_agent(state: TravelState):
+    city = extract_destination(state['user_query'])
+
+    weather_data=asyncio.run(weather_mcp_search(city))
+    forecast_data=asyncio.run(forecast_mcp_search(city))
+
+    return{
+        "weather_results":f"""
+        Current Weather: {weather_data}
+        Forecast: {forecast_data}
+        """,
+        "messages": [
+            AIMessage(content="Weather results fetched")
+        ],
+        "llm_calls": state.get("llm_calls", 0) + 1
+    }
+
 # ITENARY AGENT
 def itinerary_agent(state: TravelState):
-   prompt = f"Create an itinerary based on the following flight and hotel information: {state['flight_results']} and {state['hotel_results']} Make the itinerary practical,budget-aware, and easy to follow."
+   prompt = f"Create an itinerary based on the following flight and hotel information and weather information: {state['flight_results']} and {state['hotel_results']} and {state['weather_results']}. Make the itinerary practical,budget-aware, and easy to follow."
    response= llm.invoke(
        [SystemMessage(content="YOU are an expert travel planner."),
         HumanMessage(content=prompt)
@@ -157,13 +177,16 @@ def final_agent(state: TravelState):
    Flight Results: {state['flight_results']}
    Hotel Results: {state['hotel_results']}
    Itinerary: {state['itinerary']} 
+   Weather Results: {state['weather_results']}
+
    Format the final answer beautifully using these section:
    1.Trip Summary
    2.Flight Details
    3.Hotel Details
-   4.Day-by-Day Itinerary
-   5.Estimated Budget
-   6.Final Reccomendations
+   4.Weather Details
+   5.Day-by-Day Itinerary
+   6.Estimated Budget
+   7.Final Reccomendations
 
    Important:
    -Be clear and practical.
@@ -240,6 +263,18 @@ def run_travel_agent(user_input:str,thread_id:str|None=None):
         "itinerary": result.get("itinerary", ""),
         "llm_calls": result.get("llm_calls", 0)
     }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

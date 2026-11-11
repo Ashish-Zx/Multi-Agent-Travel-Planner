@@ -3,11 +3,19 @@ import asyncio
 import certifi
 from dotenv import load_dotenv
 from langchain_mcp_adapters.client import MultiServerMCPClient
+from langchain_openai import ChatOpenAI
 
 load_dotenv()
 TAVILY_API_KEY=os.getenv("TAVILY_API_KEY")
 AVIATION_STACK_API_KEY=os.getenv("AVIATION_STACK_API_KEY")
 OPENWEATHER_API_KEY=os.getenv("OPEN_WEATHER_API_KEY")
+INCEPTION_API_KEY=os.getenv("INCEPTION_API_KEY")
+
+llm = ChatOpenAI(
+    model="mercury-3",
+    api_key=INCEPTION_API_KEY,
+    base_url="https://api.inceptionlabs.ai/v1",
+) 
 
 
 
@@ -148,3 +156,11 @@ async def forecast_mcp_search(city: str):
             "city": city
         }
     )
+
+# Destination Extractor
+
+def extract_destination(query: str):
+    prompt = f"Extract the destination from the following query: {query} Return only the destination."
+    response= llm.invoke(prompt)
+    return response.content.strip()
+
